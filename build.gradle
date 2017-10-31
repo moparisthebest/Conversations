@@ -64,11 +64,11 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 236
         versionName "1.21.0"
         archivesBaseName += "-$versionName"
-        applicationId "eu.siacs.conversations"
+        applicationId "eu.siacs.conversations.sms"
     }
 
     dexOptions {

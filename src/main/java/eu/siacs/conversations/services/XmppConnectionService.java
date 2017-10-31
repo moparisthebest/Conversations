@@ -167,6 +167,10 @@ public class XmppConnectionService extends Service {
 
 	private long mLastActivity = 0;
 
+	public XmppConnectionService() {
+		SMSReceiver.xmppConnectionService = this;
+	}
+
 	public DatabaseBackend databaseBackend;
 	private ContentObserver contactObserver = new ContentObserver(null) {
 		@Override
