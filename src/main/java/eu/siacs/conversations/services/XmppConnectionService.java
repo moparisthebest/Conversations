@@ -1283,10 +1283,12 @@ public class XmppConnectionService extends Service {
 		} else {
 			if (addToConversation) {
 				conversation.add(message);
+				SMSReceiver.newMessage(message);
 			}
 			if (saveInDb) {
 				databaseBackend.createMessage(message);
 			} else if (message.edited()) {
+				// todo: wtf to do with edited messages? SOL I guess?
 				databaseBackend.updateMessage(message, message.getEditedId());
 			}
 			updateConversationUi();

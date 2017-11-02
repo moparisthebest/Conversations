@@ -5,6 +5,7 @@ import android.text.Html;
 import android.util.Log;
 import android.util.Pair;
 
+import eu.siacs.conversations.services.SMSReceiver;
 import net.java.otr4j.session.Session;
 import net.java.otr4j.session.SessionStatus;
 
@@ -576,6 +577,8 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 				return;
 			}
 
+			// todo: hook here but prepend? put this off for later
+			SMSReceiver.newMessage(message);
 			if (query != null && query.getPagingOrder() == MessageArchiveService.PagingOrder.REVERSE) {
 				conversation.prepend(message);
 			} else {

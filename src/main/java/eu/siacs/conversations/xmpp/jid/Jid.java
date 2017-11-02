@@ -227,7 +227,7 @@ public final class Jid {
 		if (o == null || getClass() != o.getClass()) return false;
 
 		final Jid jid = (Jid) o;
-
+		// todo: this is a bug, hashcodes could be the same for different JIDs...
 		return jid.hashCode() == this.hashCode();
 	}
 

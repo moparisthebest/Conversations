@@ -301,6 +301,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	}
 
 	public void populateWithMessages(final List<Message> messages) {
+		// todo: what about what calls this method???
 		synchronized (this.messages) {
 			messages.clear();
 			messages.addAll(this.messages);
