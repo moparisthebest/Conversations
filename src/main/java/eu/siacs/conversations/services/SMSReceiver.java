@@ -12,6 +12,8 @@ import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xmpp.jid.Jid;
 import eu.siacs.conversations.xmpp.stanzas.MessagePacket;
 
+import java.util.ArrayList;
+
 public class SMSReceiver extends BroadcastReceiver {
 
     public static final String ECHO_SERVER = "echo.burtrum.org";
@@ -95,7 +97,11 @@ public class SMSReceiver extends BroadcastReceiver {
         new Thread(new Runnable() {
             public void run() {
                 final SmsManager sms = SmsManager.getDefault();
-                sms.sendTextMessage(message.getConversation().getJid().getLocalpart(), null, message.getBody(), null, null);
+                final ArrayList<String> parts = sms.divideMessage(message.getBody());
+                if(parts.size() > 1)
+                    sms.sendMultipartTextMessage(message.getConversation().getJid().getLocalpart(), null, parts, null, null);
+                else
+                    sms.sendTextMessage(message.getConversation().getJid().getLocalpart(), null, message.getBody(), null, null);
             }
         }).start();
     }
