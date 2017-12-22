@@ -8,9 +8,7 @@ import android.util.Xml;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 import eu.siacs.conversations.Config;
 
@@ -18,6 +16,7 @@ public class XmlReader {
 	private XmlPullParser parser;
 	private PowerManager.WakeLock wakeLock;
 	private InputStream is;
+	private boolean inputSet = false;
 
 	public XmlReader(WakeLock wakeLock) {
 		this.parser = Xml.newPullParser();
@@ -29,11 +28,24 @@ public class XmlReader {
 		this.wakeLock = wakeLock;
 	}
 
+	public XmlReader(final Reader input) throws IOException {
+		this((WakeLock) null);
+		if(input == null)
+			throw new IOException();
+		this.inputSet = true;
+		try {
+			parser.setInput(input);
+		} catch (XmlPullParserException e) {
+			throw new IOException("error resetting parser");
+		}
+	}
+
 	public void setInputStream(InputStream inputStream) throws IOException {
 		if (inputStream == null) {
 			throw new IOException();
 		}
 		this.is = inputStream;
+		this.inputSet = true;
 		try {
 			parser.setInput(new InputStreamReader(this.is));
 		} catch (XmlPullParserException e) {
@@ -53,7 +65,7 @@ public class XmlReader {
 	}
 
 	public Tag readTag() throws XmlPullParserException, IOException {
-		if (wakeLock.isHeld()) {
+		if (wakeLock != null && wakeLock.isHeld()) {
 			try {
 				wakeLock.release();
 			} catch (RuntimeException re) {
@@ -61,8 +73,10 @@ public class XmlReader {
 			}
 		}
 		try {
-			while (this.is != null && parser.next() != XmlPullParser.END_DOCUMENT) {
-				wakeLock.acquire();
+			while (inputSet && parser.next() != XmlPullParser.END_DOCUMENT) {
+				if(wakeLock != null) {
+					wakeLock.acquire();
+				}
 				if (parser.getEventType() == XmlPullParser.START_TAG) {
 					Tag tag = Tag.start(parser.getName());
 					final String xmlns = parser.getNamespace();
@@ -90,7 +104,7 @@ public class XmlReader {
 		} catch (Throwable throwable) {
 			throw new IOException("xml parser mishandled "+throwable.getClass().getSimpleName()+"("+throwable.getMessage()+")", throwable);
 		} finally {
-			if (wakeLock.isHeld()) {
+			if (wakeLock != null && wakeLock.isHeld()) {
 				try {
 					wakeLock.release();
 				} catch (RuntimeException re) {
@@ -120,6 +134,31 @@ public class XmlReader {
 			if (!nextTag.isNo()) {
 				Element child = this.readElement(nextTag);
 				element.addChild(child);
+			}
+			nextTag = this.readTag();
+			if (nextTag == null) {
+				throw new IOException("interrupted mid tag");
+			}
+		}
+		return element;
+	}
+
+	public Element nextWholeElement() throws XmlPullParserException, IOException {
+		final Tag currentTag = this.readTag();
+		if(currentTag == null)
+			return null;
+		final Element element = new Element(currentTag.name);
+		int tagCount = 1;
+		element.setAttributes(currentTag.getAttributes());
+		Tag nextTag = this.readTag();
+		if (nextTag == null) {
+			throw new IOException("interrupted mid tag");
+		}
+		while (!nextTag.isEnd(element.getName()) && --tagCount < 1) {
+			if (nextTag.isStart(element.getName()))
+				++tagCount;
+			if (!nextTag.isNo()) {
+				element.addChild(this.readElement(nextTag));
 			}
 			nextTag = this.readTag();
 			if (nextTag == null) {

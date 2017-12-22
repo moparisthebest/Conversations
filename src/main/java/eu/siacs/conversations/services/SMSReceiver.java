@@ -68,6 +68,8 @@ public class SMSReceiver extends BroadcastReceiver {
                 forwardedMsg.setFrom(fromJid);
                 forwardedMsg.setBody(message);
 
+                Log.d(Config.LOGTAG, "smsXml: " + packet.toString());
+
                 xmppConnectionService.sendMessagePacket(getAccount(), packet);
 
                 //---send a broadcast intent to update the SMS received in the activity---

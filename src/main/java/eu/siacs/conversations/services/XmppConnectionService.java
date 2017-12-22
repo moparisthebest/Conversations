@@ -5,10 +5,7 @@ import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
@@ -34,6 +31,7 @@ import android.util.Log;
 import android.util.LruCache;
 import android.util.Pair;
 
+import eu.siacs.conversations.remote.XmppPluginService;
 import net.java.otr4j.OtrException;
 import net.java.otr4j.session.Session;
 import net.java.otr4j.session.SessionID;
@@ -139,6 +137,7 @@ import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 import eu.siacs.conversations.xmpp.stanzas.MessagePacket;
 import eu.siacs.conversations.xmpp.stanzas.PresencePacket;
 import me.leolin.shortcutbadger.ShortcutBadger;
+import org.openintents.xmpp.IXmppPluginCallback;
 
 public class XmppConnectionService extends Service {
 
@@ -166,6 +165,7 @@ public class XmppConnectionService extends Service {
 	private final HashSet<Jid> mLowPingTimeoutMode = new HashSet<>();
 
 	private long mLastActivity = 0;
+	private XmppPluginService xmppPluginService;
 
 	public XmppConnectionService() {
 		SMSReceiver.xmppConnectionService = this;
@@ -1283,7 +1283,7 @@ public class XmppConnectionService extends Service {
 		} else {
 			if (addToConversation) {
 				conversation.add(message);
-				SMSReceiver.newMessage(message);
+				this.newMessage(message);
 			}
 			if (saveInDb) {
 				databaseBackend.createMessage(message);
@@ -3930,6 +3930,20 @@ public class XmppConnectionService extends Service {
 
 	public ShortcutService getShortcutService() {
 		return mShortcutService;
+	}
+
+	public void setXmppPluginService(final XmppPluginService xmppPluginService) {
+		this.xmppPluginService = xmppPluginService;
+	}
+
+	public void newMessage(final Message message) {
+		SMSReceiver.newMessage(message);
+		if(xmppPluginService != null)
+			try {
+				xmppPluginService.newMessage(message);
+			} catch(Exception e) {
+				Log.e(Config.LOGTAG, "error sending message to xmppPluginService", e);
+			}
 	}
 
 	public interface OnMamPreferencesFetched {
