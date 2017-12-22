@@ -39,6 +39,7 @@ public class PgpDecryptionService {
     }
 
 	public synchronized boolean decrypt(final Message message, boolean notify) {
+        // todo: wtf to do with these
         messages.add(message);
         if (notify && pendingIntent == null) {
             pendingNotifications.add(message);

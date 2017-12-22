@@ -576,6 +576,8 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 				return;
 			}
 
+			// todo: hook here but prepend? put this off for later
+			mXmppConnectionService.newMessage(message);
 			if (query != null && query.getPagingOrder() == MessageArchiveService.PagingOrder.REVERSE) {
 				conversation.prepend(message);
 			} else {

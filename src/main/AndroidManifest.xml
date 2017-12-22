@@ -218,6 +218,18 @@
             android:exported="false"
             android:grantUriPermissions="true"/>
 
+        <!-- Xmpp Remote API, this service has explicitly no permission requirements
+        because we are using our own package based allow/disallow system
+        -->
+        <service
+                android:name=".remote.XmppPluginService"
+                android:enabled="true"
+                android:exported="true"
+                tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="org.openintents.xmpp.IXmppService" />
+            </intent-filter>
+        </service>
 
     </application>
 

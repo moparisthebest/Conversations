@@ -34,6 +34,7 @@ import android.util.Log;
 import android.util.LruCache;
 import android.util.Pair;
 
+import eu.siacs.conversations.remote.XmppPluginService;
 import net.java.otr4j.OtrException;
 import net.java.otr4j.session.Session;
 import net.java.otr4j.session.SessionID;
@@ -166,6 +167,7 @@ public class XmppConnectionService extends Service {
 	private final HashSet<Jid> mLowPingTimeoutMode = new HashSet<>();
 
 	private long mLastActivity = 0;
+	private XmppPluginService xmppPluginService;
 
 	public DatabaseBackend databaseBackend;
 	private ContentObserver contactObserver = new ContentObserver(null) {
@@ -1279,10 +1281,12 @@ public class XmppConnectionService extends Service {
 		} else {
 			if (addToConversation) {
 				conversation.add(message);
+				this.newMessage(message);
 			}
 			if (saveInDb) {
 				databaseBackend.createMessage(message);
 			} else if (message.edited()) {
+				// todo: wtf to do with edited messages? SOL I guess?
 				databaseBackend.updateMessage(message, message.getEditedId());
 			}
 			updateConversationUi();
@@ -3924,6 +3928,19 @@ public class XmppConnectionService extends Service {
 
 	public ShortcutService getShortcutService() {
 		return mShortcutService;
+	}
+
+	public void setXmppPluginService(final XmppPluginService xmppPluginService) {
+		this.xmppPluginService = xmppPluginService;
+	}
+
+	public void newMessage(final Message message) {
+		if(xmppPluginService != null)
+			try {
+				xmppPluginService.newMessage(message);
+			} catch(Exception e) {
+				Log.e(Config.LOGTAG, "error sending message to xmppPluginService", e);
+			}
 	}
 
 	public interface OnMamPreferencesFetched {
